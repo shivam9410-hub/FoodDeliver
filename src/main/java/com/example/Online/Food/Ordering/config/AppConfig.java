@@ -29,7 +29,7 @@ public class AppConfig {
                        .requestMatchers("/api/**").authenticated().anyRequest().permitAll()).addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                .csrf(AbstractHttpConfigurer::disable)
                .cors(cors->cors.configurationSource((corsConfigureSource())));
-        return null;
+        return http.build();
     }
     private CorsConfigurationSource corsConfigureSource() {
         return new CorsConfigurationSource() {

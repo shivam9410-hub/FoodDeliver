@@ -1,7 +1,9 @@
 package com.example.Online.Food.Ordering.controller;
 
 
+import com.example.Online.Food.Ordering.config.JwProvider;
 import com.example.Online.Food.Ordering.model.Cart;
+import com.example.Online.Food.Ordering.model.USER_ROLE;
 import com.example.Online.Food.Ordering.model.User;
 import com.example.Online.Food.Ordering.repository.CartRepository;
 import com.example.Online.Food.Ordering.repository.UserRepository;
@@ -33,7 +35,7 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
-    private JwtProvider jwtProvider;
+    private JwProvider jwtProvider;
     @Autowired
     private CustomerUserDetailsService customerUserDetailsService;
      @Autowired
@@ -56,7 +58,8 @@ public class AuthController {
          cartRepository.save(cart);
          Authentication authentication =new UsernamePasswordAuthenticationToken(user.getEmail(),user.getPassword());
          SecurityContextHolder.getContext().setAuthentication(authentication);
-         String jwt = jwtProvider.generateToken(authentication);
+         String jwt =   jwtProvider.generateToken(authentication);
+
          AuthResponse authResponse= new AuthResponse();
          authResponse.setJwt(jwt);
          authResponse.setMessage("Register Success");
@@ -65,25 +68,22 @@ public class AuthController {
 
      }
 
-
+    @PostMapping("/signin")
      public ResponseEntity<AuthResponse>signInHandler(@RequestBody LoginRequest req) throws Exception {
 
         String username = req.getEmail();
         String password = req.getPassword();
         Authentication authentication = authenticate(username,password);
+         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+         String role= authorities.isEmpty()?null:authorities.iterator().next().getAuthority();
 
        String jwt = jwtProvider.generateToken(authentication);
        AuthResponse authResponse= new AuthResponse();
        authResponse.setJwt(jwt);
        authResponse.setMessage("Login Success");
-       Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-
-       String role= authorities.isEmpty()?null:authorities.iterator().next().getAuthority();
-
+       authResponse.setRole(USER_ROLE.valueOf(role));
        return new ResponseEntity<>(authResponse, HttpStatus.OK);
-
-
-    return null;
     }
     private Authentication authenticate(String username, String password) {
         UserDetails userDetails = customerUserDetailsService.loadUserByUsername(username);
